@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "player")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,4 +20,7 @@ public class Player {
     @JoinColumn(name = "game_id")
     @JsonIgnore
     private Game game;
+
+
+    private boolean finishedTurn;
 }

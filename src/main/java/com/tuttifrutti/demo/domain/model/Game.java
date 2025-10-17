@@ -5,6 +5,7 @@ import lombok.*;
 import java.util.*;
 
 @Entity
+@Table(name = "game")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,12 +14,25 @@ public class Game {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String status; // WAITING, IN_ROUND, FINISHED
+    private String code;
+
+    @Enumerated(EnumType.STRING)
+    private GameStatus status = GameStatus.WAITING; // WAITING, IN_ROUND, FINISHED
 
     private int timePerRoundSeconds;
+    private int rounds;
+
+    @ElementCollection
+    private List<String> categories = new ArrayList<>();
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Player> players = new ArrayList<>();
 
     private int currentRoundIndex = 0;
+
+    private boolean started = false;
+    private  boolean finished = false;
+    private char currentLetter;
+
+    //private Round currentRound;
 }
