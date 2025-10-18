@@ -4,12 +4,12 @@ import com.tuttifrutti.demo.service.JudgeService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SimpleJudgeService implements JudgeService {
+public class JudgeServiceImpl implements JudgeService {
 
     @Override
     public boolean validateAnswer(String word, char expectedLetter, String category) {
         if (word == null || word.isBlank()) {
-            System.out.println("❌ Palabra vacía");
+            System.out.println("Palabra vacía");
             return false;
         }
 
@@ -19,8 +19,10 @@ public class SimpleJudgeService implements JudgeService {
 
         boolean startsWith = (first == expected);
 
-        System.out.printf("🔎 Validando palabra: '%s' | Letra esperada: '%s' | Categoría: %s | Resultado: %s%n",
-                normalized, expected, category, startsWith ? "✅ válida" : "❌ inválida");
+        System.out.printf(
+                "Validando palabra: '%s' | Letra esperada: '%s' | Categoría: %s | Resultado: %s%n",
+                normalized, expected, category, startsWith ? "válida" : "inválida"
+        );
 
         return startsWith;
     }

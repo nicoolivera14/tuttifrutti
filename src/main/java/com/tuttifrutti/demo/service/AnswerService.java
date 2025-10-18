@@ -16,6 +16,7 @@ public class AnswerService {
     private final AnswerRepository answerRepository;
     private final PlayerRepository playerRepository;
     private final GameRepository gameRepository;
+    private final JudgeService judgeService;
 
     public Answer submitAnswer(Long gameId, Long playerId, String category, String value) {
         Game game = gameRepository.findById(gameId)
@@ -23,14 +24,27 @@ public class AnswerService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado."));
 
+        boolean isValid = judgeService.validateAnswer(
+                value,
+                game.getCurrentLetter(),
+                category
+        );
+
         Answer answer = Answer.builder()
                 .category(category)
                 .value(value)
-                .player(playerRepository.findById(playerId).get())
-                .game(gameRepository.findById(gameId).get())
-                .valid(false)
+                .player(player)
+                .game(game)
+                .valid(isValid)
                 .build();
 
-        return answerRepository.save(answer);
+        answerRepository.save(answer);
+
+        if (isValid) {
+            player.setTotalScore(player.getTotalScore() + 10);
+            playerRepository.save(player);
+        }
+
+        return answer;
     }
 }

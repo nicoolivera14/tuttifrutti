@@ -17,7 +17,8 @@ public class Game {
     private String code;
 
     @Enumerated(EnumType.STRING)
-    private GameStatus status = GameStatus.WAITING; // WAITING, IN_ROUND, FINISHED
+    @Column(nullable = false)
+    private GameStatus status = GameStatus.WAITING;
 
     private int timePerRoundSeconds;
     private int rounds;
