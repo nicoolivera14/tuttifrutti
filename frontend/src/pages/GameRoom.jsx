@@ -1,4 +1,3 @@
-// src/pages/GameRoom.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAllGames, startRound, endRound } from "../api/gameApi.js";
@@ -12,45 +11,33 @@ export default function GameRoom() {
   }, []);
 
   const loadGame = async () => {
-    const res = await getAllGames();
-    const currentGame = res.find((g) => g.id === parseInt(gameId));
-    setGame(currentGame);
+    try {
+      const games = await getAllGames();
+      const found = games.find((g) => g.id === parseInt(gameId));
+      setGame(found);
+    } catch (err) {
+      console.error("Error al cargar juego:", err);
+    }
   };
 
-  const handleStart = async () => {
-    await startRound(gameId);
-    loadGame();
-  };
-
-  const handleEnd = async () => {
-    await endRound(gameId);
-    loadGame();
-  };
-
-  if (!game) return <div>Cargando...</div>;
+  if (!game) return <p>Cargando...</p>;
 
   return (
-    <div>
-      <h1>Game {game.code}</h1>
-      <p>Status: {game.status}</p>
-      <p>Current Letter: {game.currentLetter || "-"}</p>
-      <p>
-        Round: {game.currentRoundIndex + 1} / {game.rounds}
-      </p>
+    <div style={{ padding: "2rem"}}>
+      <h2>Game Room</h2>
+      <p>ID: {game.id}</p>
+      <p>Código: {game.code}</p>
+      <p>Estado: {game.status}</p>
 
-      <h3>Players:</h3>
+      <h3>Jugadores</h3>
       <ul>
         {game.players.map((p) => (
           <li key={p.id}>{p.name}</li>
         ))}
       </ul>
 
-      <button onClick={handleStart} disabled={game.status !== "WAITING"}>
-        Start Round
-      </button>
-      <button onClick={handleEnd} disabled={game.status !== "IN_ROUND"}>
-        End Round
-      </button>
+      <button onClick={() => startRound(game.id)}>Iniciar ronda</button>
+      <button onClick={() => endRound(game.id)}>Finalizar ronda</button>
     </div>
   );
 }

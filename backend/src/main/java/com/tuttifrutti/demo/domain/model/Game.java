@@ -43,5 +43,4 @@ public class Game {
     private  boolean finished = false;
     private char currentLetter;
 
-    //private Round currentRound;
 }

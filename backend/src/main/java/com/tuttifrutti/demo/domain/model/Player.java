@@ -11,8 +11,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Player {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    private String email;
+    private String password;
     private String name;
     private int totalScore = 0;
 

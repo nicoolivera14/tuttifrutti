@@ -1,21 +1,29 @@
+// src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import GameRoom from "./pages/GameRoom.jsx";
+import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
+import { getCurrentPlayer } from "./api/playerApi.js";
 
-function App() {
+export default function App() {
+  const user = getCurrentPlayer();
+
   return (
-    <Router>
-      <div>
-        <h1>React conectado siempre a backend</h1>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/" element={<GameRoom />} />
-          <Route path="/game/:gameId" element={<GameRoom />} />
-        </Routes>
-      </div>
-    </Router>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/home"
+          element={user ? <Home /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/game/:gameId"
+          element={user ? <GameRoom /> : <Navigate to="/" replace />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;
