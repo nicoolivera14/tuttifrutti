@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { getAllGames, createGame, joinGame } from "../api/gameApi";
+import { getAllGames, createGame, joinGameByCode } from "../api/gameApi";
 import { useNavigate } from "react-router-dom";
+
+function getCurrentPlayer() {
+  const stored = sessionStorage.getItem("player");
+  return stored ? JSON.parse(stored) : null;
+}
 
 export default function Home() {
   const [games, setGames] = useState([]);
@@ -24,31 +29,38 @@ export default function Home() {
     setLoading(false);
   };
 
-  const handleJoin = async (gameId) => {
-    const name = playerName || prompt("Nombre jugador:");
-    if (!name) return;
+  const handleJoinByCode = async () => {
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer) return;
+
+    if (!code.trim()) {
+      alert("Ingresá un código de sala.");
+      return;
+    }
+
     try {
-      await joinGame(gameId, name);
-      navigate(`/game/${gameId}`);
+      const updatedGame = await joinGameByCode(code, currentPlayer.name);
+      navigate(`/game/${updatedGame.id}`);
     } catch (error) {
       console.error("Error uniendose a sala:", error);
     }
   };
 
-  const handleJoinByCode = async () => {
-    const game = games.find((g) => g.id === parseInt(code));
-    if (game) {
-      handleJoin(game.id);
-    } else {
-      alert("No se encontró una sala con ese código.");
-    }
-  };
-
   const handleCreate = async () => {
-    const name = prompt("Nombre de la sala:");
-    if (!name) return;
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer) {
+      alert("Tenés que iniciar sesión primero.");
+      return;
+    }
+    const gameName = `Sala de ${currentPlayer.name}`;
+   
     try {
-      const newGame = await createGame({ code: name, timePerRoundSeconds: 60, rounds: 3, categories: [] });
+      const newGame = await createGame({ 
+        name: gameName,
+        playerName: currentPlayer.name, 
+        timePerRoundSeconds: 60, 
+        rounds: 3, 
+        categories: [] });
       alert(`Sala creada correctamente. Código de la sala: ${newGame.code}`);
       loadGames();
       navigate(`/game/${newGame.id}`);
@@ -57,18 +69,32 @@ export default function Home() {
     }
   };
 
+  const handleJoinFromList = async (game) => {
+    const currentPlayer = getCurrentPlayer();
+    if (!currentPlayer) {
+      alert("Tenés que iniciar sesión primero.");
+      return;
+    }
+
+    try {
+      await joinGameByCode(game.code, currentPlayer.name);
+      navigate(`/game/${game.code}`);
+    } catch (error) {
+      alert("No se pudo unir a la sala.")
+    }
+  };
+
   return (
     <div style={{ textAlign: "center", padding: "2rem" }}>
       <h1>Tutti Frutti</h1>
 
       <div style={{ marginBottom: "1rem" }}>
-        <input type="text" placeholder="Código de Sala" value={code} onChange={(e) => setCode(e.target.value)} />
-        <input type="text" placeholder="Nombre" value={playerName} onChange={(e) => setPlayerName(e.target.value)} />
-        <button onClick={handleJoinByCode}>Unirse</button>
+        <input type="text" placeholder="Código de Sala" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
+        <button onClick={handleJoinByCode}>Unirse por código</button>
       </div>
 
       <h2>Salas Disponibles</h2>
-
+      <button onClick={loadGames} style={{ marginBottom: "1rem" }}>Actualizar lista</button>
       {loading ? (
         <p>Cargando...</p>
       ) : games.length === 0 ? (
@@ -78,23 +104,27 @@ export default function Home() {
         <table border="1" cellPadding="8" style={{ margin: "0 auto"}}>
         <thead>
           <tr>
-          <th>Código</th>
-          <th>Estado</th>
-          <th>Jugadores</th>
-          <th>Acción</th>
+            <th>Nombre</th>
+            <th>Código</th>
+            <th>Estado</th>
+            <th>Jugadores</th>
+            <th>Acción</th>
           </tr>
         </thead>
         <tbody>
           {games.map((game) => (
             <tr key={game.id}>
+              <th>{game.name}</th>
               <td>{game.code}</td>
               <td>{game.status}</td>
               <td>{game.players?.length || 0}</td>
               <td>
                 {game.status === "WAITING" ? (
-                  <button onClick={() => handleJoin(game.id)}>Unirse</button>
+                  <>
+                  <button onClick={() => navigate(`/game/${game.id}`)}>Ver</button>
+                  </>
                 ) : (
-                  <button disabled>Ver</button>
+                  <button onClick={() => navigate(`/game/${game.id}`)}>Ver</button>
                 )}
               </td>
             </tr>

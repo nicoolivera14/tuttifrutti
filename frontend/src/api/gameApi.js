@@ -24,6 +24,14 @@ export async function joinGame(gameId, playerName) {
   return res.json();
 }
 
+export async function joinGameByCode(gameCode, playerName) {
+  const res = await fetch(`${BASE_URL}/join-by-code?gameCode=${gameCode}&playerName=${playerName}`, {
+    method: "POST",
+    });
+    if (!res.ok) throw new Error("Error al unirse a la sala con código.");
+    return res.json();
+}
+
 export async function startRound(gameId) {
   const res = await fetch(`${BASE_URL}/${gameId}/start-round`, { method: "POST" });
   if (!res.ok)  throw new Error("Error al iniciar la ronda.");

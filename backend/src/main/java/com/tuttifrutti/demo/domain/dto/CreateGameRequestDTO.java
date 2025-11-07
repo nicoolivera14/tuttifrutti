@@ -5,6 +5,8 @@ import lombok.Data;
 
 @Data
 public class CreateGameRequestDTO {
+    private String name;
+    private String playerName;
     private int timePerRoundSeconds;
     private int rounds;
     private List<String> categories;

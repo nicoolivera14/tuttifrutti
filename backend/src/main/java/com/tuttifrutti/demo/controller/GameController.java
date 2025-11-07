@@ -29,12 +29,22 @@ public class GameController {
         return ResponseEntity.ok(game);
     }
 
+    @PutMapping("/{id}/config")
+    public ResponseEntity<Game> updateGameConfig(@PathVariable Long id, @RequestBody Game updatedData) {
+        Game game = gameService.findById(id);
+        game.setTimePerRoundSeconds(updatedData.getTimePerRoundSeconds());
+        game.setRounds(updatedData.getRounds());
+        game.setCategories(updatedData.getCategories());
+        return ResponseEntity.ok(gameService.save(game));
+    }
+
     //UNIRSE A JUEGO
-    @PostMapping("/{gameId}/join")
-    public Player joinGame(
-            @PathVariable("gameId") Long gameId,
+    @PostMapping("/join-by-code")
+    public ResponseEntity<Game> joinGameByCode(
+            @RequestParam("gameCode") String gameCode,
             @RequestParam("playerName") String playerName) {
-        return gameService.joinGame(gameId, playerName);
+        Game updatedGame = gameService.joinGameByCode(gameCode, playerName);
+        return ResponseEntity.ok(updatedGame);
     }
 
 
