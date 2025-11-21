@@ -40,6 +40,10 @@ export default function Home() {
 
     try {
       const updatedGame = await joinGameByCode(code, currentPlayer.name);
+      
+      const playerFromGame = updatedGame.players[updatedGame.players.length - 1];
+      sessionStorage.setItem("playerGameId", playerFromGame.id);
+      
       navigate(`/game/${updatedGame.id}`);
     } catch (error) {
       console.error("Error uniendose a sala:", error);
@@ -61,6 +65,8 @@ export default function Home() {
         timePerRoundSeconds: 60, 
         rounds: 3, 
         categories: [] });
+
+      sessionStorage.setItem("playerGameId", newGame.players[0].id);
       alert(`Sala creada correctamente. Código de la sala: ${newGame.code}`);
       loadGames();
       navigate(`/game/${newGame.id}`);
@@ -78,7 +84,7 @@ export default function Home() {
 
     try {
       await joinGameByCode(game.code, currentPlayer.name);
-      navigate(`/game/${game.code}`);
+      navigate(`/game/${game.id}`);
     } catch (error) {
       alert("No se pudo unir a la sala.")
     }

@@ -5,6 +5,8 @@ import Home from "./pages/Home.jsx";
 import GameRoom from "./pages/GameRoom.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
+import GamePlay from "./pages/GamePlay.jsx";
+import ResultsPage from "./pages/ResultsPage.jsx";
 import { getCurrentPlayer } from "./api/playerApi.js";
 
 export default function App() {
@@ -23,6 +25,12 @@ export default function App() {
           path="/game/:gameId"
           element={user ? <GameRoom /> : <Navigate to="/" replace />}
         />
+        <Route 
+          path="/game/:gameId/play" 
+          element={<GamePlay />} />
+        <Route
+          path="/game/:gameId/results"
+          element={<ResultsPage />} />
       </Routes>
     </BrowserRouter>
   );

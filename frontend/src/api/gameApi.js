@@ -43,3 +43,15 @@ export async function endRound(gameId) {
   if (!res.ok)  throw new Error("Error al finalizar la ronda.");
   return res.json();
 }
+
+export async function getGameById(id) {
+  const res = await fetch(`http://localhost:8080/games/${id}`);
+  return res.json();
+}
+
+export async function resetGame(gameId) {
+    const res = await fetch(`http://localhost:8080/games/${gameId}/reset`, {
+        method: "POST",
+    });
+    return res.json();
+}

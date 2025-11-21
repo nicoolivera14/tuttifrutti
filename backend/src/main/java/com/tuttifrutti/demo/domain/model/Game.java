@@ -23,13 +23,13 @@ public class Game {
     @Column(nullable = false)
     private GameStatus status = GameStatus.WAITING;
 
-    @PrePersist
+    /*@PrePersist
     @PreUpdate
     private void fixInvalidStatus() {
         if (status == null) {
             status = GameStatus.WAITING;
         }
-    }
+    }*/
 
     private int timePerRoundSeconds;
     private int rounds;
@@ -40,10 +40,8 @@ public class Game {
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Player> players = new ArrayList<>();
 
-    private int currentRoundIndex = 0;
+    private int currentRoundIndex = -1;
 
-    private boolean started = false;
-    private  boolean finished = false;
     private char currentLetter;
 
 }

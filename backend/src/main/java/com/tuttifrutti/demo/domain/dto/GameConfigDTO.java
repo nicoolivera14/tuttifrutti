@@ -1,7 +1,12 @@
-/*package com.tuttifrutti.demo.domain.dto;
+package com.tuttifrutti.demo.domain.dto;
+
+import lombok.Data;
 
 import java.util.List;
 
-public class GameConfigDTO(List<String> categories, int durationSeconds) {
-
-}*/
+@Data
+public class GameConfigDTO {
+    private int timePerRoundSeconds;
+    private int rounds;
+    private List<String> categories;
+}

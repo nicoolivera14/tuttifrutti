@@ -13,4 +13,6 @@ public interface GameService {
     Player joinGame(Long gameId, String playerName);
     Game joinGameByCode(String gameCode, String playerName);
     List<Game> getAllGames();
+
+    Game nextRound(Long gameId);
 }

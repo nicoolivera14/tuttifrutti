@@ -8,6 +8,7 @@ import com.tuttifrutti.demo.repository.GameRepository;
 import com.tuttifrutti.demo.repository.PlayerRepository;
 import com.tuttifrutti.demo.service.GameService;
 import com.tuttifrutti.demo.service.JudgeService;
+import com.tuttifrutti.demo.service.RoundService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,11 +19,13 @@ public class GameServiceImpl implements GameService {
 
     private final GameRepository gameRepository;
     private final PlayerRepository playerRepository;
+    private final RoundService roundService;
 
     public GameServiceImpl(GameRepository gameRepository, JudgeService judgeService,
-                           PlayerRepository playerRepository) {
+                           PlayerRepository playerRepository, RoundService roundService) {
         this.gameRepository = gameRepository;
         this.playerRepository = playerRepository;
+        this.roundService = roundService;
     }
 
     @Override
@@ -34,6 +37,8 @@ public class GameServiceImpl implements GameService {
         game.setCategories(req.getCategories());
         game.setStatus(GameStatus.WAITING);
         game.setCode(generateGameCode());
+        game.setCurrentRoundIndex(-1);
+        //game.setCurrentLetter(roundService.generateRandomLetter());
 
         gameRepository.save(game);
 
@@ -66,12 +71,11 @@ public class GameServiceImpl implements GameService {
         Player player = new Player();
         player.setName(playerName);
         player.setGame(game);
+        playerRepository.save(player);
 
-        Player savedPlayer = playerRepository.save(player);
+        game.getPlayers().add(player);
 
-        game.getPlayers().add(savedPlayer);
-
-        return savedPlayer;
+        return player;
     }
 
     @Override
@@ -85,6 +89,48 @@ public class GameServiceImpl implements GameService {
         playerRepository.save(player);
 
         game.getPlayers().add(player);
+
+        return gameRepository.save(game);
+    }
+
+    public Game nextRound (Long gameId) {
+        Game game = findById(gameId);
+
+        System.out.println("➡️ nextRound() llamado | BEFORE | gameId=" + gameId +
+                " | roundIndex=" + game.getCurrentRoundIndex() +
+                " | status=" + game.getStatus());
+
+        if (game.getStatus() == GameStatus.FINISHED) {
+            throw new RuntimeException("El juego ya terminó");
+        }
+
+
+        if (game.getCurrentRoundIndex() == -1) {
+            game.setCurrentRoundIndex(0);
+            game.setCurrentLetter(roundService.generateRandomLetter());
+            game.setStatus(GameStatus.IN_ROUND);
+
+            System.out.println("✔️ nextRound() AFTER primera ronda | roundIndex=" + game.getCurrentRoundIndex() +
+                    " | status=" + game.getStatus());
+
+            return gameRepository.save(game);
+        }
+
+        int nextIndex = game.getCurrentRoundIndex() + 1;
+
+        if (nextIndex >= game.getRounds()) {
+            game.setStatus(GameStatus.FINISHED);
+            System.out.println("🏁 Juego FINALIZADO | AFTER | roundIndex=" + game.getCurrentRoundIndex());
+
+            return gameRepository.save(game);
+        }
+
+        game.setCurrentRoundIndex(nextIndex);
+        game.setCurrentLetter(roundService.generateRandomLetter());
+        game.setStatus(GameStatus.IN_ROUND);
+
+        System.out.println("➡️ nextRound() AFTER avanzó ronda | roundIndex=" + game.getCurrentRoundIndex() +
+                " | status=" + game.getStatus());
 
         return gameRepository.save(game);
     }

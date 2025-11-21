@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAllGames, startRound, endRound } from "../api/gameApi.js";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 
 export default function GameRoom() {
@@ -40,18 +41,15 @@ export default function GameRoom() {
 
   const handleSaveConfig = async () => {
     try {
-      const updated = await fetch(`http://localhost:8080/games/${game.id}/config`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const updated = await axios.put(`http://localhost:8080/games/${game.id}/config`, {
           timePerRoundSeconds: parseInt(timePerRound),
           rounds: parseInt(rounds),
           categories: categoriesInput.split(",").map(c => c.trim()).filter(Boolean)
-        })
-    }).then(r => r.json());
+        });
 
-    setGame(updated);
-    alert("Configuración guardad correctamente.");
+    setGame(updated.data);
+    alert("Configuración guardada correctamente.");
+    await loadGame();
     } catch (error) {
       console.error("Error al guardar configuración:", error);
       alert("Error al guardar la configuración.");
@@ -95,9 +93,8 @@ export default function GameRoom() {
         </div>
       )}
 
-      <button onClick={() => startRound(game.id)}>Iniciar ronda</button>
-      <button onClick={() => endRound(game.id)}>Finalizar ronda</button>
       <button onClick={() => navigate(`/home`)}>Ver salas</button>
+      <button onClick={() => navigate(`/game/${game.id}/play`)}>Ir a la partida</button>
     </div>
   );
 }
