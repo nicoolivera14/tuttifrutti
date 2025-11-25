@@ -18,30 +18,25 @@ import java.util.List;
 public class GameController {
 
     private final GameService gameService;
-    private final PlayerRepository playerRepository;
-    private final RoundService roundService;
 
-    public GameController(GameService gameService,
-                          PlayerRepository playerRepository, RoundService roundService) {
+    public GameController(GameService gameService) {
         this.gameService = gameService;
-        this.playerRepository = playerRepository;
-        this.roundService = roundService;
     }
 
     //CREAR JUEGO
     @PostMapping
     public ResponseEntity<Game> createGame(@RequestBody CreateGameRequestDTO req) {
-        Game game = gameService.createGame(req);
-        return ResponseEntity.ok(game);
+        return ResponseEntity.ok(gameService.createGame(req));
     }
 
+    //ACTUALIZAR CONFIG
     @PutMapping("/{id}/config")
-    public ResponseEntity<Game> updateGameConfig(@PathVariable("id") Long id, @RequestBody GameConfigDTO data) {
-
-        Game game = gameService.findById(id);
+    public ResponseEntity<Game> updateGameConfig(@PathVariable("id") Long id, @RequestParam("playerId") Long playerId, @RequestBody GameConfigDTO data) {
+        /*Game game = gameService.findById(id);
         game.setTimePerRoundSeconds(data.getTimePerRoundSeconds());
         game.setRounds(data.getRounds());
-        game.setCategories(data.getCategories());
+        game.setCategories(data.getCategories());*/
+        Game game = gameService.updateGameConfig(id, playerId, data);
         return ResponseEntity.ok(gameService.save(game));
     }
 
@@ -56,8 +51,7 @@ public class GameController {
     public ResponseEntity<Game> joinGameByCode(
             @RequestParam("gameCode") String gameCode,
             @RequestParam("playerName") String playerName) {
-        Game updatedGame = gameService.joinGameByCode(gameCode, playerName);
-        return ResponseEntity.ok(updatedGame);
+        return ResponseEntity.ok(gameService.joinGameByCode(gameCode, playerName));
     }
 
 
@@ -65,17 +59,13 @@ public class GameController {
     @GetMapping
     public ResponseEntity<List<Game>> getAllGames() {
         List<Game> games = gameService.getAllGames();
-        System.out.println("🔎 Cantidad de juegos en DB: " + games.size());
         return ResponseEntity.ok(games);
     }
 
     //SIGUIENTE RONDA
     @PostMapping("/{gameId}/next-round")
     public ResponseEntity<Game> nextRound(@PathVariable("gameId") Long gameId) {
-        Game updatedGame = gameService.nextRound(gameId);
-        System.out.println("FINISH TURN → AFTER nextRound: index=" + updatedGame.getCurrentRoundIndex());
-
-        return ResponseEntity.ok(updatedGame);
+        return ResponseEntity.ok(gameService.nextRound(gameId));
     }
 
     //TERMINAR TURNO
@@ -85,7 +75,7 @@ public class GameController {
             @RequestParam("playerId") Long playerId,
             @RequestParam(name= "surrender", required = false, defaultValue = "false") boolean surrender) {
 
-         Game game = gameService.findById(gameId);
+         /*Game game = gameService.findById(gameId);
          Player player = playerRepository.findById(playerId)
                  .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
@@ -100,8 +90,18 @@ public class GameController {
 
              game = gameService.nextRound(gameId);
 
-         }
-        return ResponseEntity.ok(gameService.save(game));
+         }*/
+
+        return ResponseEntity.ok(gameService.finishTurn(gameId, playerId));
+    }
+
+    @PostMapping("/{gameId}/force-end-round")
+    public ResponseEntity<Game> forceEndRound(
+            @PathVariable("gameId") Long gameId,
+            @RequestParam("playerId") Long playerId) {
+
+        Game updated = gameService.forceEndRound(gameId, playerId);
+        return ResponseEntity.ok(updated);
     }
 
     //Validación a futuro sobre nextRound para que solo se llame cuando todos los jugadores terminen su turno

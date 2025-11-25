@@ -23,13 +23,8 @@ public class Game {
     @Column(nullable = false)
     private GameStatus status = GameStatus.WAITING;
 
-    /*@PrePersist
-    @PreUpdate
-    private void fixInvalidStatus() {
-        if (status == null) {
-            status = GameStatus.WAITING;
-        }
-    }*/
+    @Column(name = "round_end_timestamp")
+    private Long roundEndTimestamp;
 
     private int timePerRoundSeconds;
     private int rounds;

@@ -1,6 +1,7 @@
 package com.tuttifrutti.demo.service;
 
 import com.tuttifrutti.demo.domain.dto.CreateGameRequestDTO;
+import com.tuttifrutti.demo.domain.dto.GameConfigDTO;
 import com.tuttifrutti.demo.domain.model.Player;
 import com.tuttifrutti.demo.domain.model.Game;
 
@@ -13,6 +14,8 @@ public interface GameService {
     Player joinGame(Long gameId, String playerName);
     Game joinGameByCode(String gameCode, String playerName);
     List<Game> getAllGames();
-
+    Game finishTurn(Long gameId, Long playerId);
     Game nextRound(Long gameId);
+    Game updateGameConfig(Long gameId, Long playerId, GameConfigDTO data);
+    Game forceEndRound(Long gameId, Long playerId);
 }

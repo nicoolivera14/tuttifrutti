@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getGameById } from "../api/gameApi";
 import { submitAnswer, finishTurn } from "../api/answerApi";
+import { createStompClient } from "../websocketClient";
 import axios from "axios";
 
 export default function GamePlay() {
@@ -34,6 +35,27 @@ export default function GamePlay() {
     }
     }, [gameId]);
 
+    //WEBSOCKET
+    useEffect(() => {
+        const client = createStompClient(() => {
+            console.log("Conectado a WebSocket");
+
+            client.subscribe(`/topic/games/${gameId}`, (message) => {
+                const updatedGame = JSON.parse(message.body);
+                console.log("Evento WS, juego actualizado:", updatedGame);
+
+                setGame(updatedGame);
+                setCurrentRound(updatedGame.currentRoundIndex);
+                setTimeLeft(updatedGame.timePerRoundSeconds);
+            });
+        });
+
+        return () => {
+            console.log("Websocket desconectado.");
+            client.deactivate();
+        };
+    }, [gameId]);
+
     //REDIRIGIR A RESULTADOS
     useEffect(() => {
         if (!game) return;
@@ -42,23 +64,6 @@ export default function GamePlay() {
             navigate(`/game/${game.id}/results`);
         }
     }, [game, navigate]);
-
-    useEffect(() => {
-        if (!game || !timerStarted) return;
-        if (game.status !== "IN_ROUND") return;
-        if (timeLeft <= 0) return;
-
-        const timer = setTimeout(() => {
-            if (timeLeft <= 1) {
-                handleSurrender();
-            } else {
-                setTimeLeft(timeLeft - 1);
-            }
-        }, 1000);
-
-        return () => clearTimeout(timer);
-    }, [timeLeft, game, timerStarted]);
-
 
     useEffect(() => {
         if (!game) return;
@@ -75,6 +80,24 @@ export default function GamePlay() {
         const interval = setInterval(() => loadGame(), 2000);
         return () => clearInterval(interval);
     }, []);
+
+    //TIMER
+    useEffect(() => {
+        if (!game?.roundEndTimestamp) return;
+
+        const interval = setInterval(() => {
+            const now = Date.now();
+            const diff = Math.max(0, Math.floor((game.roundEndTimestamp - now) / 1000));
+            setTimeLeft(diff);
+
+            if (diff === 0) {
+                clearInterval(interval);
+                handleTimeOver();
+            }
+        }, 250);
+
+        return () => clearInterval(interval);
+    }, [game?.roundEndTimestamp]);
 
     const loadGame = async () => {
         try {
@@ -127,6 +150,10 @@ export default function GamePlay() {
         setAnswers((prev) => ({ ...prev, [category]: value}));
     };
 
+    const handleTimeOver = async () => {
+        await finishTurn(game.id, playerId);
+    };
+
     const handleTuttiFrutti = async () => {
         try {
             if (!playerId) {
@@ -138,9 +165,8 @@ export default function GamePlay() {
                 const value = answers[category] || "";
                 await submitAnswer(game.id, playerId, category, value);
             }
-
-            await finishTurn(game.id, playerId);
         
+            await axios.post(`http://localhost:8080/games/${game.id}/force-end-round?playerId=${playerId}`);
             alert("TuttiFrutti! Esperando siguiente ronda...");
 
             setAnswers({});

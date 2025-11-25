@@ -25,6 +25,7 @@ public class Player {
     @JsonIgnore
     private Game game;
 
+    private boolean owner;
 
     private boolean finishedTurn;
 }
