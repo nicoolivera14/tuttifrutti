@@ -175,6 +175,10 @@ public class GameServiceImpl implements GameService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
+        if (player.isFinishedTurn()) {
+            return game;
+        }
+
         player.setFinishedTurn(true);
         playerRepository.save(player);
 

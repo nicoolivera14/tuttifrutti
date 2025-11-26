@@ -24,23 +24,45 @@ public class AnswerService {
         Player player = playerRepository.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado."));
 
-        boolean isValid = judgeService.validateAnswer(
-                value,
-                game.getCurrentLetter(),
-                category
-        );
+        long now = System.currentTimeMillis();
+        if (now > game.getRoundEndTimestamp()) {
+            throw new RuntimeException("El tiempo de la ronda ya terminó");
+        }
 
-        Answer answer = Answer.builder()
-                .category(category)
-                .value(value)
-                .player(player)
-                .game(game)
-                .valid(isValid)
-                .build();
+        if (player.isFinishedTurn()) {
+            throw new RuntimeException("Ya terminaste tu turno esta ronda");
+        }
+
+        String required = String.valueOf(game.getCurrentLetter()).toUpperCase();
+
+        if (value == null) value = "";
+        value = value.trim();
+
+        String provided = value.toUpperCase();
+
+        if(!provided.startsWith(required)) {
+            throw new RuntimeException("La palabra no comienza con la letra correcta");
+        }
+
+        Answer answer = answerRepository
+                .findByPlayerAndCategoryAndGameAndRoundNumber(player, category, game, game.getCurrentRoundIndex())
+                .orElse(new Answer());
+
+        answer.setCategory(category);
+        answer.setPlayer(player);
+        answer.setGame(game);
+        answer.setRoundNumber(game.getCurrentRoundIndex());
+
+        boolean previusValid = Boolean.TRUE.equals(answer.getValid());
+
+        boolean isValid = judgeService.validateAnswer(value, game.getCurrentLetter(), category);
+
+        answer.setValue(value);
+        answer.setValid(isValid);
 
         answerRepository.save(answer);
 
-        if (isValid) {
+        if (!previusValid && isValid) {
             player.setTotalScore(player.getTotalScore() + 10);
             playerRepository.save(player);
         }

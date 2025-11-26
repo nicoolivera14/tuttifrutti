@@ -99,6 +99,18 @@ export default function GamePlay() {
         return () => clearInterval(interval);
     }, [game?.roundEndTimestamp]);
 
+    //ENVIAR RESPUESTAS PARCIALES
+    useEffect(() => {
+        if (!game) return;
+
+        const thisPlayer = game.players.find(p => p.id === playerId);
+        if (!thisPlayer) return;
+
+        if (thisPlayer.finishedTurn && canWrite) {
+            autoSubmitPartialAnswers();
+        }
+    }, [gameId]);
+
     const loadGame = async () => {
         try {
             
@@ -146,13 +158,92 @@ export default function GamePlay() {
     };
 
     //MANEJO DE INPUTS
-    const handleChange = (category, value) => {
-        setAnswers((prev) => ({ ...prev, [category]: value}));
+    const handleChange = async (category, value) => {
+        if (!game || !playerId) return;
+
+        const requiredLetter = game.currentLetter?.toUpperCase();
+
+        if (!requiredLetter) return;
+
+        let fixed = value;
+
+        if (fixed.length === 0) {
+            setAnswers((prev) => ({ ...prev, [category]: ""}));
+            return;
+        }
+
+        if (!fixed.toUpperCase().startsWith(requiredLetter)) {
+            fixed = requiredLetter + fixed.slice(1);
+        }
+
+        setAnswers((prev) => ({ ...prev, [category]: fixed}));
+
+        try {
+            await submitAnswer(game.id, playerId, category, fixed);
+        } catch (err) {
+            console.error("Error auto-guardando respuesta", err);
+        }
     };
 
     const handleTimeOver = async () => {
         await finishTurn(game.id, playerId);
     };
+
+    const canWrite = 
+        game?.status === "IN_ROUND" &&
+        timeLeft > 0 &&
+        !game.players.find(p => p.id === playerId)?.finishedTurn;
+
+    const autoSubmitPartialAnswers = async () => {
+        try {
+            for (const category of game.categories) {
+                let value = answers[category] || "";
+                value = value.trim();
+
+                if (!value || value.trim() === "") {
+                    value = game.currentLetter;
+                }
+
+                await submitAnswer(game.id, playerId, category, value);
+            }
+        } catch (error) {
+            console.error("Error enviando respuestas incompletas:", error);
+        }
+    };
+
+    const allInputsFilled = () => {
+        if (!game) return false;
+
+        const requiredLetter = game.currentLetter?.toUpperCase();
+
+        return game.categories.every(cat => {
+            const value = answers[cat] || "";
+            return value.trim().length > 0;
+        });
+    };
+
+    const prepareAnswers = () => {
+        const prepared = {};
+        const requiredLetter = game.currentLetter.toUpperCase();
+
+        for (const category of game.categories) {
+            let value = answers[category] || "";
+
+            value = value.trim();
+
+            if (value === "" ) {
+                value = requiredLetter;
+            }
+
+            if (!value.toUpperCase().startsWith(requiredLetter)) {
+                value = requiredLetter + value.slice(1);
+            }
+
+            prepared[category] = value;
+        }
+
+        return prepared;
+    }
 
     const handleTuttiFrutti = async () => {
         try {
@@ -161,9 +252,10 @@ export default function GamePlay() {
                 return;
             }
 
-            for (const category of game.categories) {
-                const value = answers[category] || "";
-                await submitAnswer(game.id, playerId, category, value);
+            const prepared = prepareAnswers();
+
+            for (const category of Object.keys(prepared)) {
+                await submitAnswer(game.id, playerId, category, prepared[category]);
             }
         
             await axios.post(`http://localhost:8080/games/${game.id}/force-end-round?playerId=${playerId}`);
@@ -183,9 +275,13 @@ export default function GamePlay() {
                 return;
             }
 
-            for (const category of game.categories) {
-                const value = answers[category] || "";
-                await submitAnswer(game.id, playerId, category, value);
+            const prepared = prepareAnswers();
+
+            for (const category of Object.keys(prepared)) {
+                //const value = answers[category] || "";
+                //if (!value || value.trim() === "") continue;
+
+                await submitAnswer(game.id, playerId, category, prepared[category]);
             }
 
             await finishTurn(game.id, playerId);
@@ -199,7 +295,7 @@ export default function GamePlay() {
         }
     };
 
-    if (!game) return <p>Cargando juego...</p>;
+    if (!game || !game.categories) return <p>Cargando juego...</p>;
 
     const displayRound = game.currentRoundIndex < 0 ? 1 : game.currentRoundIndex + 1;
 
@@ -234,6 +330,7 @@ export default function GamePlay() {
                                 </label>
                                 <input 
                                     type="text"
+                                    placeholder={`${game.currentLetter}...`}
                                     value={answers[cat] || ""}
                                     onChange={(e) => handleChange(cat, e.target.value)}
                                     style={{
@@ -241,7 +338,8 @@ export default function GamePlay() {
                                         width: "200px",
                                         borderRadius: "4px",
                                         border: "1px solid #aaa",
-                                    }} 
+                                    }}
+                                    disabled={!canWrite} 
                                 />
                         </div>
                     ))}          
@@ -255,7 +353,9 @@ export default function GamePlay() {
                 color: "white",
                 border: "none",
                 borderRadius: "5px",
-            }}>Tutti Frutti!</button>
+            }}
+            disabled={!canWrite || !allInputsFilled()}
+            >Tutti Frutti!</button>
 
             <button
              onClick={handleSurrender}
@@ -268,7 +368,8 @@ export default function GamePlay() {
                  border: "none",
                  borderRadius: "5px",
                 }}
-                >Me rindo</button>
+            disabled={!canWrite}
+            >Me rindo</button>
 
             <button
              onClick={() => navigate("/home")}

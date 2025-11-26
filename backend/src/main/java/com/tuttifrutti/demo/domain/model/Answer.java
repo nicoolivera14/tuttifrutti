@@ -18,7 +18,9 @@ public class Answer {
 
     private String category; // Ej: "País", "Animal", "Color" (por ahora fijo, luego configurable)
     private String value;    // Ej: "Perú", "Perro", "Púrpura"
-    private boolean valid; // Si la respuesta fue correcta (luego lo usará el Judge)
+
+    @Column
+    private Boolean valid; // Si la respuesta fue correcta (luego lo usará el Judge)
 
     @ManyToOne
     @JoinColumn(name = "player_id")
@@ -28,5 +30,7 @@ public class Answer {
     @JoinColumn(name = "game_id")
     private Game game;
 
+    @Column(name = "round_number", nullable = false)
+    private Integer roundNumber;
 
 }
