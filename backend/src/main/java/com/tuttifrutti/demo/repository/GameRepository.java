@@ -10,3 +10,6 @@ public interface GameRepository extends JpaRepository<Game, Long> {
     Optional<Game> findByCode(String code);
     List<Game> findByCodeContainingIgnoreCase(String code);
 }
+
+
+

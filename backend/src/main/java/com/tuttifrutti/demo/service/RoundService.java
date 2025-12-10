@@ -19,3 +19,4 @@ public class RoundService {
         return (char) ('A' + random.nextInt(26));
     }
 }
+

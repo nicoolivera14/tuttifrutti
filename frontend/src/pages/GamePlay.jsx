@@ -157,33 +157,54 @@ export default function GamePlay() {
         }
     };
 
+    const debounceRef = useRef({});
+    const lastValueRef = useRef({});
+    const isSendingRef = useRef({});
+
     //MANEJO DE INPUTS
-    const handleChange = async (category, value) => {
-        if (!game || !playerId) return;
+    const handleChange = (category, value) => {
+    if (!game || !playerId) return;
 
-        const requiredLetter = game.currentLetter?.toUpperCase();
+    const requiredLetter = game.currentLetter?.toUpperCase();
+    if (!requiredLetter) return;
 
-        if (!requiredLetter) return;
+    let fixed = value;
 
-        let fixed = value;
+    // Si el input queda vacío, solo actualizamos estado y no enviamos nada
+    if (fixed.length === 0) {
+        setAnswers(prev => ({ ...prev, [category]: "" }));
+        return;
+    }
 
-        if (fixed.length === 0) {
-            setAnswers((prev) => ({ ...prev, [category]: ""}));
-            return;
-        }
+    // Forzar que empiece con la letra correcta
+    if (!fixed.toUpperCase().startsWith(requiredLetter)) {
+        fixed = requiredLetter + fixed.slice(1);
+    }
 
-        if (!fixed.toUpperCase().startsWith(requiredLetter)) {
-            fixed = requiredLetter + fixed.slice(1);
-        }
+    setAnswers(prev => ({ ...prev, [category]: fixed }));
 
-        setAnswers((prev) => ({ ...prev, [category]: fixed}));
+    // --- Si es igual a lo último enviado, no enviar ---
+    if (lastValueRef.current[category] === fixed) return;
 
+    // --- Si ya está enviando, no repetir ---
+    if (isSendingRef.current[category]) return;
+
+    // --- Debounce 300ms ---
+    clearTimeout(debounceRef.current[category]);
+    debounceRef.current[category] = setTimeout(async () => {
         try {
+            isSendingRef.current[category] = true;
+
             await submitAnswer(game.id, playerId, category, fixed);
+
+            lastValueRef.current[category] = fixed;
         } catch (err) {
             console.error("Error auto-guardando respuesta", err);
+        } finally {
+            isSendingRef.current[category] = false;
         }
-    };
+    }, 300);
+};
 
     const handleTimeOver = async () => {
         await finishTurn(game.id, playerId);

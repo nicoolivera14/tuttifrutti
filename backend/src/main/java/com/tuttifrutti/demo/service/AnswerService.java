@@ -1,6 +1,7 @@
 package com.tuttifrutti.demo.service;
 
 import com.tuttifrutti.demo.domain.model.Answer;
+import com.tuttifrutti.demo.domain.model.JudgeResult;
 import com.tuttifrutti.demo.domain.model.Player;
 import com.tuttifrutti.demo.domain.model.Game;
 import com.tuttifrutti.demo.repository.AnswerRepository;
@@ -55,7 +56,8 @@ public class AnswerService {
 
         boolean previusValid = Boolean.TRUE.equals(answer.getValid());
 
-        boolean isValid = judgeService.validateAnswer(value, game.getCurrentLetter(), category);
+        JudgeResult result = judgeService.judge(value, game.getCurrentLetter(), category);
+        boolean isValid = result.isValid();
 
         answer.setValue(value);
         answer.setValid(isValid);

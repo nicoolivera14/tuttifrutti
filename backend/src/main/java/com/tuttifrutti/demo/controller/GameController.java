@@ -3,11 +3,7 @@ package com.tuttifrutti.demo.controller;
 import com.tuttifrutti.demo.domain.dto.CreateGameRequestDTO;
 import com.tuttifrutti.demo.domain.dto.GameConfigDTO;
 import com.tuttifrutti.demo.domain.model.Game;
-import com.tuttifrutti.demo.domain.model.GameStatus;
-import com.tuttifrutti.demo.domain.model.Player;
-import com.tuttifrutti.demo.repository.PlayerRepository;
 import com.tuttifrutti.demo.service.GameService;
-import com.tuttifrutti.demo.service.RoundService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
@@ -31,11 +27,8 @@ public class GameController {
 
     //ACTUALIZAR CONFIG
     @PutMapping("/{id}/config")
-    public ResponseEntity<Game> updateGameConfig(@PathVariable("id") Long id, @RequestParam("playerId") Long playerId, @RequestBody GameConfigDTO data) {
-        /*Game game = gameService.findById(id);
-        game.setTimePerRoundSeconds(data.getTimePerRoundSeconds());
-        game.setRounds(data.getRounds());
-        game.setCategories(data.getCategories());*/
+    public ResponseEntity<Game> updateGameConfig(@PathVariable("id") Long id, @RequestParam("playerId") Long playerId,
+                                                 @RequestBody GameConfigDTO data) {
         Game game = gameService.updateGameConfig(id, playerId, data);
         return ResponseEntity.ok(gameService.save(game));
     }
@@ -74,23 +67,6 @@ public class GameController {
             @PathVariable("gameId") Long gameId,
             @RequestParam("playerId") Long playerId,
             @RequestParam(name= "surrender", required = false, defaultValue = "false") boolean surrender) {
-
-         /*Game game = gameService.findById(gameId);
-         Player player = playerRepository.findById(playerId)
-                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
-
-         player.setFinishedTurn(true);
-         playerRepository.save(player);
-
-         boolean allFinished = game.getPlayers().stream().allMatch(Player::isFinishedTurn);
-
-         if (allFinished && game.getStatus() == GameStatus.IN_ROUND) {
-
-             game.getPlayers().forEach(p -> p.setFinishedTurn(false));
-
-             game = gameService.nextRound(gameId);
-
-         }*/
 
         return ResponseEntity.ok(gameService.finishTurn(gameId, playerId));
     }

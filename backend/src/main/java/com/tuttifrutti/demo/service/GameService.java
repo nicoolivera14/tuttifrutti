@@ -19,3 +19,5 @@ public interface GameService {
     Game updateGameConfig(Long gameId, Long playerId, GameConfigDTO data);
     Game forceEndRound(Long gameId, Long playerId);
 }
+
+

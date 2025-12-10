@@ -10,3 +10,4 @@ import java.util.Optional;
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
     Optional<Answer> findByPlayerAndCategoryAndGameAndRoundNumber(Player player, String category, Game game, Integer roundNumber);
 }
+

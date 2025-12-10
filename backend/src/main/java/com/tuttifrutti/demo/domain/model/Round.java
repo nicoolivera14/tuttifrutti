@@ -7,3 +7,4 @@ public class Round {
     private Map<String, Answer> answersByPlayer;
     private boolean active;
 }
+

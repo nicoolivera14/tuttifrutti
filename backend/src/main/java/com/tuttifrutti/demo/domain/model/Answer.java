@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "\"answer\"")
+@Table(name = "\"answer\"", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"player_id", "category", "game_id", "round_number"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,3 +36,4 @@ public class Answer {
     private Integer roundNumber;
 
 }
+
